@@ -46,9 +46,10 @@ jobs:
     needs: build
     runs-on: ubuntu-latest
     steps:
-      - name: Checkout code
+      - name: Checkout manifests repo
         uses: actions/checkout@v3
         with:
+          repository: /phoenix0xff/GitOps
           token: ${{ secrets.PERSONAL_ACCESS_TOKEN }}
           fetch-depth: 0
 
@@ -56,14 +57,12 @@ jobs:
         run: |
           git config user.name "${{ secrets.GIT_USERNAME }}"
           git config user.email "${{ secrets.GIT_EMAIL }}"
-          git fetch origin
-          git checkout main
-          git pull origin main
+
           sed -i "s+${{ secrets.DOCKERHUB_USERNAME }}/my-app.*+${{ secrets.DOCKERHUB_USERNAME }}/my-app:${{ github.sha }}+g" manifest/deployment.yaml
 
       - name: Verify new image tag in deployment.yaml
         run: |
-          if ! grep -q "${{ secrets.DOCKERHUB_USERNAME }}/my-app:${{ github.sha }}" manifest/deployment.yaml; then
+          if ! grep -q "${{ secrets.DOCKERHUB_USERNAME }}/my-app:${{ github.sha }}" deployment.yaml; then
             echo "Error: deployment.yaml does not contain the new image tag!"
             exit 1
           else
@@ -72,8 +71,6 @@ jobs:
 
       - name: Commit and push updated deployment.yaml
         run: |
-          git config user.name "${{ secrets.GIT_USERNAME }}"
-          git config user.email "${{ secrets.GIT_EMAIL }}"
-          git add manifest/deployment.yaml
+          git add deployment.yaml
           git commit -m "Update image to my-app:${{ github.sha }}"
           git push origin main
