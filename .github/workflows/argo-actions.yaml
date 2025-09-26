@@ -55,14 +55,20 @@ jobs:
 
       - name: Update deployment.yaml with new image
         run: |
-          git config user.name "${{ secrets.GIT_USERNAME }}"
-          git config user.email "${{ secrets.GIT_EMAIL }}"
+          git config user.name "$GIT_USERNAME"
+          git config user.email "$GIT_EMAIL"
 
-          sed -i "s+image: ${DOCKERHUB_USERNAME}/my-app.*+image: ${DOCKERHUB_USERNAME}/my-app:${GITHUB_SHA}+g" manifest/deployment.yaml
+          echo "Before update:"
+          grep "image:" manifest/deployment.yaml || true
+
+          sed -i "s+image: $DOCKERHUB_USERNAME/my-app.*+image: $DOCKERHUB_USERNAME/my-app:$GITHUB_SHA+g" manifest/deployment.yaml
+
+          echo "After update:"
+          grep "image:" manifest/deployment.yaml || true
 
       - name: Verify new image tag in deployment.yaml
         run: |
-          if ! grep -q "${{ secrets.DOCKERHUB_USERNAME }}/my-app:${{ github.sha }}" deployment.yaml; then
+          if ! grep -q "$DOCKERHUB_USERNAME/my-app:$GITHUB_SHA" manifest/deployment.yaml; then
             echo "Error: deployment.yaml does not contain the new image tag!"
             exit 1
           else
@@ -71,6 +77,6 @@ jobs:
 
       - name: Commit and push updated deployment.yaml
         run: |
-          git add deployment.yaml
-          git commit -m "Update image to my-app:${{ github.sha }}"
+          git add manifest/deployment.yaml
+          git commit -m "Update image to my-app:$GITHUB_SHA" || echo "No changes to commit"
           git push origin main
