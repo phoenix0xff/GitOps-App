@@ -49,8 +49,8 @@ jobs:
       - name: Checkout manifests repo
         uses: actions/checkout@v3
         with:
-          repository: /phoenix0xff/GitOps
-          token: ${{ secrets.PERSONAL_ACCESS_TOKEN }}
+          repository: phoenix0xff/GitOps
+          token: ${{ secrets.PERSONAL_ACCESS_TOKEN }} # cant use same access token here as I am accessing another repository
           fetch-depth: 0
 
       - name: Update deployment.yaml with new image
