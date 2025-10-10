@@ -50,7 +50,7 @@ jobs:
         uses: actions/checkout@v3
         with:
           repository: phoenix0xff/GitOps
-          token: ${{ secrets.PERSONAL_ACCESS_TOKEN }} # cant use same access token here as I am accessing another repository
+          token: ${{ secrets.PERSONAL_ACCESS_TOKEN }}
           fetch-depth: 0
 
       - name: Update deployment.yaml with new image
@@ -65,6 +65,17 @@ jobs:
 
           echo "After update:"
           grep "image:" manifest/deployment.yaml || true
+
+      - name: Inject app commit SHA into manifest
+        run: |
+          echo "Adding appCommit annotation with SHA $GITHUB_SHA"
+          sudo apt-get update && sudo apt-get install -y yq
+
+          # updating annotation
+          yq -i '.metadata.annotations.appCommit = env.GITHUB_SHA' manifest/deployment.yaml
+
+          echo "Resulting metadata section:"
+          yq '.metadata' manifest/deployment.yaml
 
       - name: Verify new image tag in deployment.yaml
         run: |
