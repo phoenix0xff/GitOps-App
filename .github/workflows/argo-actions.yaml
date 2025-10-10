@@ -27,7 +27,7 @@ jobs:
         with:
           node-version: '14'
 
-      - name: Install Node.js dependencies
+      - name: Install dependencies
         run: npm install
 
       - name: Build Docker image
@@ -39,7 +39,7 @@ jobs:
       - name: Log in to DockerHub
         run: echo "${{ secrets.DOCKERHUB_TOKEN }}" | docker login -u "${{ secrets.DOCKERHUB_USERNAME }}" --password-stdin
 
-      - name: Push Docker image to DockerHub
+      - name: Push Docker image
         run: docker push ${{ secrets.DOCKERHUB_USERNAME }}/my-app:${{ github.sha }}
 
   deploy:
@@ -68,33 +68,8 @@ jobs:
           echo "After update:"
           grep "image:" manifest/deployment.yaml || true
 
-      - name: Install yq (Go version)
-        run: |
-          sudo wget https://github.com/mikefarah/yq/releases/download/v4.47.2/yq_linux_amd64 -O /usr/bin/yq
-          sudo chmod +x /usr/bin/yq    
-
-      - name: Inject app commit SHA into Deployment manifest
-        run: |
-          echo "Adding appCommit annotation with SHA $GITHUB_SHA"
-
-          yq -i '
-            .metadata.annotations.appCommit = strenv(GITHUB_SHA)
-          ' manifest/deployment.yaml
-
-          echo "Resulting metadata section:"
-          yq '.metadata.annotations' manifest/deployment.yaml
-
-      - name: Verify image tag
-        run: |
-          if ! grep -q "$DOCKERHUB_USERNAME/my-app:$GITHUB_SHA" manifest/deployment.yaml; then
-            echo "Error: deployment.yaml does not contain the new image tag!"
-            exit 1
-          else
-            echo "Image tag verification passed."
-          fi
-
-      - name: Commit and push updated deployment.yaml
+      - name: Commit and push updated manifest
         run: |
           git add manifest/deployment.yaml
-          git commit -m "Update image and appCommit to $GITHUB_SHA" || echo "No changes to commit"
+          git commit -m "Update image to $GITHUB_SHA" || echo "No changes to commit"
           git push origin main
