@@ -76,7 +76,7 @@ jobs:
           echo "Adding appCommit annotation with SHA $GITHUB_SHA"
 
           # updating annotation
-          yq -i '.metadata.annotations.appCommit = env.GITHUB_SHA' manifest/deployment.yaml
+          yq -i ".metadata.annotations.appCommit = \"${GITHUB_SHA}\"" manifest/deployment.yaml
 
           echo "Resulting metadata section:"
           yq '.metadata' manifest/deployment.yaml
