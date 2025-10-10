@@ -71,15 +71,16 @@ jobs:
           sudo wget https://github.com/mikefarah/yq/releases/download/v4.47.2/yq_linux_amd64 -O /usr/bin/yq
           sudo chmod +x /usr/bin/yq    
 
-      - name: Inject app commit SHA into manifest
+      - name: Inject app commit SHA into Application manifest
         run: |
           echo "Adding appCommit annotation with SHA $GITHUB_SHA"
 
-          # updating annotation
-          yq -i ".metadata.annotations.appCommit = \"${GITHUB_SHA}\"" manifest/deployment.yaml
+          yq -i '
+            .metadata.annotations += {"appCommit": strenv(GITHUB_SHA)}
+          ' application.yaml
 
           echo "Resulting metadata section:"
-          yq '.metadata' manifest/deployment.yaml
+          yq '.metadata.annotations' application.yaml
 
       - name: Verify new image tag in deployment.yaml
         run: |
