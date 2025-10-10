@@ -53,11 +53,13 @@ jobs:
           token: ${{ secrets.PERSONAL_ACCESS_TOKEN }}
           fetch-depth: 0
 
-      - name: Update deployment.yaml with new image
+      - name: Configure Git
         run: |
           git config user.name "$GIT_USERNAME"
           git config user.email "$GIT_EMAIL"
 
+      - name: Update image tag in deployment.yaml
+        run: |
           echo "Before update:"
           grep "image:" manifest/deployment.yaml || true
 
@@ -71,18 +73,18 @@ jobs:
           sudo wget https://github.com/mikefarah/yq/releases/download/v4.47.2/yq_linux_amd64 -O /usr/bin/yq
           sudo chmod +x /usr/bin/yq    
 
-      - name: Inject app commit SHA into Application manifest
+      - name: Inject app commit SHA into Deployment manifest
         run: |
           echo "Adding appCommit annotation with SHA $GITHUB_SHA"
 
           yq -i '
-            .metadata.annotations += {"appCommit": strenv(GITHUB_SHA)}
-          ' application.yaml
+            .metadata.annotations.appCommit = strenv(GITHUB_SHA)
+          ' manifest/deployment.yaml
 
           echo "Resulting metadata section:"
-          yq '.metadata.annotations' application.yaml
+          yq '.metadata.annotations' manifest/deployment.yaml
 
-      - name: Verify new image tag in deployment.yaml
+      - name: Verify image tag
         run: |
           if ! grep -q "$DOCKERHUB_USERNAME/my-app:$GITHUB_SHA" manifest/deployment.yaml; then
             echo "Error: deployment.yaml does not contain the new image tag!"
@@ -91,8 +93,8 @@ jobs:
             echo "Image tag verification passed."
           fi
 
-      - name: Commit and push updated manifests
+      - name: Commit and push updated deployment.yaml
         run: |
-          git add manifest/deployment.yaml application.yaml
+          git add manifest/deployment.yaml
           git commit -m "Update image and appCommit to $GITHUB_SHA" || echo "No changes to commit"
           git push origin main
