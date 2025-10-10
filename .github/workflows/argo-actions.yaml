@@ -66,10 +66,14 @@ jobs:
           echo "After update:"
           grep "image:" manifest/deployment.yaml || true
 
+      - name: Install yq (Go version)
+        run: |
+          sudo wget https://github.com/mikefarah/yq/releases/download/v4.47.2/yq_darwin_amd64 -O /usr/bin/yq
+          sudo chmod +x /usr/bin/yq    
+
       - name: Inject app commit SHA into manifest
         run: |
           echo "Adding appCommit annotation with SHA $GITHUB_SHA"
-          sudo apt-get update && sudo apt-get install -y yq
 
           # updating annotation
           yq -i '.metadata.annotations.appCommit = env.GITHUB_SHA' manifest/deployment.yaml
