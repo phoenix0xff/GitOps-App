@@ -3,7 +3,7 @@ const app = express();
 const port = process.env.PORT || 3000;
 
 app.get('/', (req, res) => {
-  res.send('new2: Application Changes successfully roled out with GitHub Actions + ArgoCD | End-to-End GitOps CI/CD Pipeline on Kubernetes');
+  res.send('new4: Application Changes successfully roled out with GitHub Actions + ArgoCD | End-to-End GitOps CI/CD Pipeline on Kubernetes');
 });
 
 app.listen(port, () => {
