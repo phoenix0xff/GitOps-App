@@ -10,7 +10,7 @@ on:
       cooldown_seconds:
         description: Delay between commits (seconds)
         required: true
-        default: "120"
+        default: "180"
       message_prefix:
         description: Commit message prefix
         required: true
