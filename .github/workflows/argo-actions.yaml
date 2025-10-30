@@ -40,9 +40,11 @@ jobs:
             -t $DOCKERHUB_USERNAME/my-app:$COMMIT_SHA .
 
       - name: Scan Docker image with Trivy
-        run: docker run --rm -v /var/run/docker.sock:/var/run/docker.sock \
-            aquasec/trivy:latest image $DOCKERHUB_USERNAME/my-app:$COMMIT_SHA
-
+        run: |
+          docker run --rm \
+            -v /var/run/docker.sock:/var/run/docker.sock \
+            aquasec/trivy:latest image "$DOCKERHUB_USERNAME/my-app:$COMMIT_SHA"
+            
       - name: Log in to DockerHub
         run: echo "$DOCKERHUB_TOKEN" | docker login -u "$DOCKERHUB_USERNAME" --password-stdin
 
