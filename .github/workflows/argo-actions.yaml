@@ -44,7 +44,7 @@ jobs:
           docker run --rm \
             -v /var/run/docker.sock:/var/run/docker.sock \
             aquasec/trivy:latest image "$DOCKERHUB_USERNAME/my-app:$COMMIT_SHA"
-            
+
       - name: Log in to DockerHub
         run: echo "$DOCKERHUB_TOKEN" | docker login -u "$DOCKERHUB_USERNAME" --password-stdin
 
@@ -66,6 +66,21 @@ jobs:
         run: |
           git config user.name "$GIT_USERNAME"
           git config user.email "$GIT_EMAIL"
+
+      # Might remove the two entries below later, used for debugging only
+      - name: Install yq
+        run: |
+          sudo wget -qO /usr/local/bin/yq https://github.com/mikefarah/yq/releases/download/v4.44.3/yq_linux_amd64
+          sudo chmod +x /usr/local/bin/yq
+
+      - name: Add commit annotations
+        env:
+          GIT_SHA: ${{ env.COMMIT_SHA }}
+        run: |
+          yq -i '
+            .metadata.annotations."dora.dev/source-commit" = strenv(GIT_SHA) |
+            .spec.template.metadata.annotations."org.opencontainers.image.revision" = strenv(GIT_SHA)
+          ' manifest/deployment.yaml
 
       - name: Update image tag in deployment.yaml
         run: |
